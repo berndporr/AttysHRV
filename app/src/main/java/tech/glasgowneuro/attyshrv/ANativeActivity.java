@@ -17,6 +17,7 @@ import tech.glasgowneuro.attyscomm.AttysComm;
 public class ANativeActivity extends android.app.NativeActivity {
   static final String TAG = "AttysHRV";
   static final String HR_FILE = "attyshrv_heartrate.tsv";
+  static final String RAW_FILE = "adc_data.tsv";
 
   static private long instance = 0;
 
@@ -40,8 +41,8 @@ public class ANativeActivity extends android.app.NativeActivity {
     setHRfilePath(full_hr_file_path);
     // raw data
     try {
-      File logFile = new File(getBaseContext().getExternalFilesDir(null), "raw.csv");
-      rawdatalog =  new PrintWriter(new FileOutputStream(fullpath, true));
+      File logFile = new File(getBaseContext().getExternalFilesDir(null), RAW_FILE);
+      rawdatalog =  new PrintWriter(new FileOutputStream(logFile, true));
     }
     catch (IOException e) {
       Log.e(TAG, "Raw log file could not be opened: ", e);
