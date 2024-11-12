@@ -6,6 +6,7 @@
 #include "util.h"
 #include "ecg_rr_det.h"
 #include "Iir.h"
+#include "hr_sham.h"
 
 ////////////////////////////////
 // Heartrate callback from java
@@ -15,16 +16,26 @@ void registerAttysHRCallback(const std::function<void(float)> &f) {
     attysHRCallbacks.emplace_back(f);
 }
 
+void doAllHRCallbacks(float bpm) {
+    for (auto &cb: attysHRCallbacks) {
+        cb(bpm);
+    }
+}
+
+// fakeHR with 250Hz sampling rate
+FakeHR fakeHR;
 
 class MyHRCallBack: public ECG_rr_det::RRlistener {
 public:
     void hasRpeak(long,
-                          float bpm,
-                          double,
-                          double) override {
+                  float bpm,
+                  double,
+                  double) override {
         ALOGV("HR = %f",bpm);
-        for (auto &cb: attysHRCallbacks) {
-            cb(bpm);
+        if (!isSham()) {
+            doAllHRCallbacks(bpm);
+        } else {
+            fakeHR.setEnabled();
         }
     }
 };
@@ -48,6 +59,13 @@ JNIEXPORT void JNICALL
 Java_tech_glasgowneuro_attyshrv_ANativeActivity_dataUpdate(JNIEnv *, jclass, jlong instance, jfloat data) {
     data = iirnotch.filter(data);
     rrDet.detect(data);
+    if (isSham()) {
+        const float bpm = fakeHR.getFakeHR();
+        if (bpm > 0) {
+            ALOGV("fake HR = %f",bpm);
+            doAllHRCallbacks(bpm);
+        }
+    }
     for (auto &v : attysDataCallbacks) {
         v(data);
     }
@@ -73,6 +91,7 @@ Java_tech_glasgowneuro_attyshrv_ANativeActivity_initJava2CPP(JNIEnv *env,
     if (fs < 125) return;
     iirnotch.setup(fs, 50, 2.5);
     rrDet.init(fs);
+    fakeHR.init(fs);
 }
 
 //////////////////////////////////
