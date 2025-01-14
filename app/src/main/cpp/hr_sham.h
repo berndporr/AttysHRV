@@ -7,6 +7,7 @@
 
 #include<cmath>
 #include<vector>
+#include <android/log.h>
 #include "subj_number.h"
 
 class FakeHR {
@@ -162,11 +163,30 @@ private:
     };
 };
 
-bool isSham() {
-    if (getSubjectNumber() > 10) {
-        return true;
+uint32_t xorshift32(uint32_t s)
+{
+    /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+    uint32_t x = s;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return s = x;
+}
+
+bool calcRandom(int subjNo) {
+    uint32_t seed = 0x7;
+    uint32_t s = seed;
+    bool b = false;
+    for(int i = 0; i < subjNo; i++) {
+        s = xorshift32(s);
+        b = !(s & 1);
     }
-    return false;
+    ALOGV("subj no %d = %d",subjNo,b);
+    return b;
+}
+
+bool isSham() {
+    return calcRandom(getSubjectNumber());
 }
 
 #endif //ATTYSHRV_HR_SHAM_H

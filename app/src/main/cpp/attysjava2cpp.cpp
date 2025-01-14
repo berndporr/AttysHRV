@@ -8,6 +8,8 @@
 #include "Iir.h"
 #include "hr_sham.h"
 
+constexpr long MAX_HR_FILESIZE = 100000000; // 100MB
+
 ////////////////////////////////
 // Heartrate callback from java
 std::vector<std::function<void(float)>> attysHRCallbacks;
@@ -22,6 +24,38 @@ void doAllHRCallbacks(float bpm) {
     }
 }
 
+
+void writeHR2file(float hr) {
+    const std::string path = getAttysHRfilepath();
+    if (path.empty()) {
+        ALOGE("HR file path not set");
+        return;
+    }
+    FILE* hrFile = fopen(path.c_str(), "at");
+    if (nullptr == hrFile) {
+        ALOGE("Cannot write to HR file: %s", path.c_str());
+        return;
+    }
+    fseek(hrFile, 0L, SEEK_END);
+    long sz = ftell(hrFile);
+    ALOGV("Writing to HR file: %s, size = %ld", path.c_str(), sz);
+    if (sz > MAX_HR_FILESIZE) {
+        fclose(hrFile);
+        ALOGV("HR file %s too large: size = %ld", path.c_str(), sz);
+        return;
+    }
+    struct timeval tv = {};
+    gettimeofday(&tv, nullptr);
+    const long epo = (long) tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    ALOGV("Writing to HR file: %ld, %.1f", epo, hr);
+    const int r = fprintf(hrFile, "%ld\t%.1f\n", epo, hr);
+    if (r < 0) {
+        ALOGE("Could not write to heartrate-file!");
+    }
+    fclose(hrFile);
+}
+
+
 // fakeHR with 250Hz sampling rate
 FakeHR fakeHR;
 
@@ -32,6 +66,7 @@ public:
                   double,
                   double) override {
         ALOGV("HR = %f",bpm);
+        writeHR2file(bpm);
         if (!isSham()) {
             doAllHRCallbacks(bpm);
         } else {
@@ -92,6 +127,17 @@ Java_tech_glasgowneuro_attyshrv_ANativeActivity_initJava2CPP(JNIEnv *env,
     iirnotch.setup(fs, 50, 2.5);
     rrDet.init(fs);
     fakeHR.init(fs);
+    int nOn = 0;
+    int nControl = 0;
+    for(int i = 0; i < 50; i++) {
+        bool b = calcRandom(i);
+        if (b) {
+            nOn++;
+        } else {
+            nControl++;
+        }
+    }
+    ALOGV("Trial: on = %d, off = %d",nOn,nControl);
 }
 
 //////////////////////////////////
