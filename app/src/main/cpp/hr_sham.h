@@ -174,10 +174,9 @@ uint32_t xorshift32(uint32_t s)
 }
 
 bool calcRandom(int subjNo) {
-    uint32_t seed = 0x7;
-    uint32_t s = seed;
+    uint32_t s = 0x07;
     bool b = false;
-    for(int i = 0; i < subjNo; i++) {
+    for(int i = 0; i < (subjNo + 32); i++) {
         s = xorshift32(s);
         b = !(s & 1);
     }
