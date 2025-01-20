@@ -25,6 +25,9 @@ void doAllHRCallbacks(float bpm) {
 }
 
 
+
+
+
 void writeHR2file(float hr) {
     const std::string path = getAttysHRfilepath();
     if (path.empty()) {
@@ -65,11 +68,12 @@ public:
                   float bpm,
                   double,
                   double) override {
-        ALOGV("HR = %f",bpm);
         writeHR2file(bpm);
         if (!isSham()) {
+            ALOGV("HR = %f",bpm);
             doAllHRCallbacks(bpm);
         } else {
+            ALOGV("HR = fake",bpm);
             fakeHR.setEnabled();
         }
     }
