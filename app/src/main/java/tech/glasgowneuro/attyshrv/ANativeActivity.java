@@ -60,10 +60,10 @@ public class ANativeActivity extends android.app.NativeActivity {
   static AttysComm.DataListener dataListener = new AttysComm.DataListener() {
     @Override
     public void gotData(long l, float[] f) {
-      double v = f[AttysComm.INDEX_Analogue_channel_1];
+      double v = f[AttysComm.INDEX_Analogue_channel_2];
       dataUpdate(instance, (float) v);
       String s = String.format(Locale.US, "%d,%f,%f\n",
-              System.currentTimeMillis(), v, f[AttysComm.INDEX_Analogue_channel_2]);
+              System.currentTimeMillis(), f[AttysComm.INDEX_Analogue_channel_1], v);
       rawdatalog.write(s);
       rawdatalog.flush();
     }

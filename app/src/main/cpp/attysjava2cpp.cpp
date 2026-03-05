@@ -73,7 +73,7 @@ public:
             ALOGV("HR = %f",bpm);
             doAllHRCallbacks(bpm);
         } else {
-            ALOGV("HR = fake",bpm);
+            ALOGV("HR = fake");
             fakeHR.setEnabled();
         }
     }
