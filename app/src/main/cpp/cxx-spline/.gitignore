@@ -1,0 +1,8 @@
+.*
+!.gitignore
+!.github
+
+*.dSYM
+*.o
+
+/test/main
